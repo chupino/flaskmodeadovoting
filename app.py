@@ -43,4 +43,4 @@ def upload_file():
     return render_template('upload_form.html')
 
 if __name__ == '__main__':
-    app.run(debug=True, host='0.0.0.0', port=8080)  # Configurado para Docker
+    app.run(debug=True, host='0.0.0.0', port=80)  # Configurado para Docker
