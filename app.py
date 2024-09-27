@@ -6,23 +6,6 @@ app = Flask(__name__)
 
 producer = KafkaProducer(bootstrap_servers='54.161.135.240:9093')
 
-# HTML simple para subir archivos
-html_form = """
-<!DOCTYPE html>
-<html>
-<head>
-    <title>Subir archivo</title>
-</head>
-<body>
-    <h1>Subir un archivo .data</h1>
-    <form method="POST" enctype="multipart/form-data">
-        <input type="file" name="file" />
-        <input type="submit" value="Subir" />
-    </form>
-</body>
-</html>
-"""
-
 @app.route('/', methods=['GET', 'POST'])
 def upload_file():
     if request.method == 'POST':
@@ -31,14 +14,22 @@ def upload_file():
         file = request.files['file']
         
         if file:
+            lines_to_send = []
             # Leer el archivo línea por línea
             for line in file:
                 line_decoded = line.decode('utf-8', errors='ignore').strip()
-                producer.send('bigdata', value=line_decoded.encode('utf-8'))
-                print(line_decoded)
+                lines_to_send.append(line_decoded)
+                # Enviar cada 100 líneas (ajusta este número según sea necesario)
+                if len(lines_to_send) >= 100:
+                    producer.send('bigdata', value='\n'.join(lines_to_send).encode('utf-8'))
+                    lines_to_send = []  # Reiniciar el acumulador
+            # Enviar cualquier línea restante
+            if lines_to_send:
+                producer.send('bigdata', value='\n'.join(lines_to_send).encode('utf-8'))
+
             end_time = time.time()
             total_time = end_time - start_time
-            return f'Archivo procesado en {total_time:.2f}. Revisa la consola para ver las líneas.'
+            return f'Archivo procesado en {total_time:.2f} segundos. Revisa la consola para ver las líneas enviadas a Kafka.'
 
     return render_template('upload_form.html')
 
