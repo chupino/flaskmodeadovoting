@@ -4,7 +4,7 @@ import time
 
 app = Flask(__name__)
 
-producer = KafkaProducer(bootstrap_servers='18.207.186.163:9093')
+producer = KafkaProducer(bootstrap_servers='54.161.135.240:9093')
 
 # HTML simple para subir archivos
 html_form = """
