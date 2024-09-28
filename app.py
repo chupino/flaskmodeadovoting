@@ -16,16 +16,20 @@ def upload_file():
         if file:
             lines_to_send = []
             # Leer el archivo línea por línea
-            for line in file:
-                line_decoded = line.decode('utf-8', errors='ignore').strip()
-                lines_to_send.append(line_decoded)
-                # Enviar cada 100 líneas (ajusta este número según sea necesario)
-                if len(lines_to_send) >= 100:
-                    producer.send('bigdata', value='\n'.join(lines_to_send).encode('utf-8'))
-                    lines_to_send = []  # Reiniciar el acumulador
-            # Enviar cualquier línea restante
-            if lines_to_send:
+        for line in file:
+            line_decoded = line.decode('utf-8', errors='ignore').strip()
+            lines_to_send.append(line_decoded)
+            if len(lines_to_send) >= 100:
                 producer.send('bigdata', value='\n'.join(lines_to_send).encode('utf-8'))
+                producer.flush()  # Asegura que el mensaje se envíe
+                print(f"Enviado: {lines_to_send}")  # Agrega esta línea
+                lines_to_send = []  # Reiniciar el acumulador
+
+        # Enviar cualquier línea restante
+        if lines_to_send:
+            producer.send('bigdata', value='\n'.join(lines_to_send).encode('utf-8'))
+            producer.flush()
+            print(f"Enviado restante: {lines_to_send}")  # Agrega esta línea
 
             end_time = time.time()
             total_time = end_time - start_time
